@@ -13,7 +13,7 @@ COPY ["GlowNestBackend.csproj", "./"]
 RUN dotnet restore "./GlowNestBackend.csproj"
 
 # Copy the remaining source code and build the application
-COPY . .
+COPY . . 
 WORKDIR "/src"
 RUN dotnet publish "./GlowNestBackend.csproj" -c Release -o /app/publish
 
