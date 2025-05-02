@@ -1,21 +1,26 @@
 using GlowNestBackend.Data;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Create and open the in-memory SQLite connection (MUST stay open for app lifetime)
+var connection = new SqliteConnection("Data Source=:memory:");
+connection.Open();
+
 // Add services to the container
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(connection));
 
 // Add CORS services
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()   // Allow all origins
-              .AllowAnyHeader()   // Allow any headers
-              .AllowAnyMethod();  // Allow any HTTP method (GET, POST, etc.)
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
