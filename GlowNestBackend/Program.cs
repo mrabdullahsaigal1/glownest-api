@@ -3,23 +3,21 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Add services to the container
 builder.Services.AddControllers();
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Enable CORS to allow all origins
+// Add CORS services
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin() // Allow requests from any origin
-              .AllowAnyHeader() // Allow any headers
-              .AllowAnyMethod(); // Allow any HTTP methods (GET, POST, etc.)
+        policy.AllowAnyOrigin()   // Allow all origins
+              .AllowAnyHeader()   // Allow any headers
+              .AllowAnyMethod();  // Allow any HTTP method (GET, POST, etc.)
     });
 });
-
-// Register AppDbContext with SQLite
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -27,10 +25,22 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Use the CORS policy
-app.UseCors("AllowAll");
+// Apply migrations programmatically at startup
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+        context.Database.Migrate(); // This creates or updates the database schema
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
+    }
+}
 
-// Configure the HTTP request pipeline.
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -38,6 +48,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Use the CORS policy
+app.UseCors("AllowAll");
 
 app.UseAuthorization();
 
