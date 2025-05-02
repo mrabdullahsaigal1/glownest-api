@@ -1,12 +1,9 @@
-using GlowNestBackend.Data;
-using Microsoft.EntityFrameworkCore;
+using System.Data.SQLite;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
 builder.Services.AddControllers();
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add CORS services
 builder.Services.AddCors(options =>
@@ -26,17 +23,17 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Apply migrations programmatically at startup
-using (var scope = app.Services.CreateScope())
+using (var connection = new SQLiteConnection("sqlitecloud://cwaq4vfxnk.g4.sqlite.cloud:8860/chinook.sqlite?apikey=PbCsf8u3mWXEzRpLmz2Lb5O9zO7M4sKIlkFZh8d71C8"))
 {
-    var services = scope.ServiceProvider;
     try
     {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate(); // This creates or updates the database schema
+        connection.Open();
+        Console.WriteLine("Connected to SQLite Cloud successfully!");
+        // Execute any initialization or schema creation here if required
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"An error occurred while applying migrations: {ex.Message}");
+        Console.WriteLine($"An error occurred while connecting to SQLite Cloud: {ex.Message}");
     }
 }
 
