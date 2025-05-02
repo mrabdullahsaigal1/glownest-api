@@ -6,6 +6,17 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
+// Enable CORS to allow all origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin() // Allow requests from any origin
+              .AllowAnyHeader() // Allow any headers
+              .AllowAnyMethod(); // Allow any HTTP methods (GET, POST, etc.)
+    });
+});
+
 // Register AppDbContext with SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -16,25 +27,8 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Seed the database
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-
-        // Apply any pending migrations (optional)
-        context.Database.Migrate();
-
-        // Seed the database
-        SeedData.Initialize(context);
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
-    }
-}
+// Use the CORS policy
+app.UseCors("AllowAll");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
