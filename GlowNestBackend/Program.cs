@@ -16,6 +16,26 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Seed the database
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<AppDbContext>();
+
+        // Apply any pending migrations (optional)
+        context.Database.Migrate();
+
+        // Seed the database
+        SeedData.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"An error occurred while seeding the database: {ex.Message}");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
